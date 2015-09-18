@@ -17,6 +17,10 @@ EspWifi::~EspWifi()
 
 }
 
+void EspWifi::tick() {
+
+}
+
 
 bool EspWifi::wait_for_esp_response(int timeout, char* term) {
 	unsigned long t = millis();
@@ -26,6 +30,7 @@ bool EspWifi::wait_for_esp_response(int timeout, char* term) {
 	// wait for at most timeout milliseconds
 	// or if OK\r\n is found
 	while (millis() < t + timeout) {
+		
 		if (_esp->available()) {
 			_buffer[i++] = _esp->read();
 			if (i >= len) {
@@ -59,7 +64,7 @@ bool EspWifi::read_till_eol() {
 
 void EspWifi::printStatus() {
 	// print device IP address
-	_dbg->print("device ip addr:");
+	_dbg->println("[EspWifi] Getting device ip address...");
 	_esp->println("AT+CIFSR");
 	wait_for_esp_response(1000);
 }
@@ -69,16 +74,19 @@ bool EspWifi::isConnected() {
 }
 
 void EspWifi::connect(char * ssid, char * password) {
+	_stair->lightNext();
+	_dbg->print("[EspWifi] connecting to ");
+	_dbg->println(ssid);
 	_ssid = ssid;
 	_password = password;
 
 	_esp->println("AT");
 	if (wait_for_esp_response(1000)) {
-		_dbg->println("ESP board properly connected");
+		_dbg->println("[EspWifi] ESP board properly connected");
+		_stair->lightNext();
 		// set mode 1 (client)
 		_esp->println("AT+CWMODE=1");
 		wait_for_esp_response(1000);
-
 		// reset WiFi module
 		_esp->print("AT+RST\r\n");
 		wait_for_esp_response(1500);
@@ -92,27 +100,45 @@ void EspWifi::connect(char * ssid, char * password) {
 		_esp->println("\"");
 		// this may take a while, so wait for 5 seconds
 		if (wait_for_esp_response(10000)) {
-			_dbg->println("Successfuly connected to Wifi");
+			_dbg->println("[EspWifi] Successfuly connected to Wifi");
+			_stair->lightNext();
 		}
 		else {
-			_dbg->println("Error conntecting to Wifi...");
+			_dbg->println("[EspWifi] Error conntecting to Wifi...");
 			_error = true;
 		}
-
-
 	}
-
-	//// start server
-	//_esp->println("AT+CIPMUX=1");
-	//wait_for_esp_response(1000);
-
-	//_esp->print("AT+CIPSERVER=1,"); // turn on TCP service
-	//_esp->println(PORT);
-	//wait_for_esp_response(1000);
-
-
-	//_esp->println("AT+CIPSTO=30");
-	//wait_for_esp_response(1000);
 }
 
 
+void EspWifi::send(int ch_id, String message) {
+
+	_esp->print("AT+CIPSEND=");
+	_esp->print(ch_id);
+	_esp->print(",");
+	_esp->println(message.length());
+	if (wait_for_esp_response(2000, "> ")) {
+		_esp->print(message);
+	}
+	else {
+		_esp->print("AT+CIPCLOSE=");
+		_esp->println(ch_id);
+	}
+}
+
+void EspWifi::startServer(int port) {
+	_dbg->print("[EspWifi] starting server on port ");
+	_dbg->println(port);
+	_esp->println("AT+CIPMUX=1");
+	wait_for_esp_response(1000);
+	_stair->lightNext();
+
+	_esp->print("AT+CIPSERVER=1,"); // turn on TCP service
+	_esp->println(port);
+	wait_for_esp_response(1000);
+	_stair->lightNext();
+
+	_esp->println("AT+CIPSTO=30");
+	wait_for_esp_response(1000);
+	_stair->lightNext();
+}

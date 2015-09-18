@@ -1,57 +1,55 @@
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 #include <EspWifi.h>
-
+#include <EspWebserver.h>
+#include <Stair.h>
 
 #define DBG Serial
 #define ESP Serial1
-
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
-EspWifi wifi = EspWifi(&DBG, &ESP);
-
 
 #define SSID "SlackersParadise"
 #define PASS "irrigas adjutrici!& elementis*1337"
 #define PORT 8080
 
 
+Stair stair;
+EspWifi wifi(&DBG, &ESP);
+EspWebserver webserver(&DBG);
+
 
 void setup() {
 	DBG.begin(9600);
 	ESP.begin(115200);
 
+
+
 	DBG.println("[ledstair] starting up...");
 
+	stair.begin();
+	wifi.setStair(&stair);
+	webserver.setStair(&stair);
 	wifi.connect(SSID, PASS);
-
-
-
-	pwm.begin();
-	pwm.setPWMFreq(1600);  // This is the maximum PWM frequency
-
-	uint8_t twbrbackup = TWBR;
-	TWBR = 12; // upgrade to 400KHz!
-
-	for (uint8_t pwmnum = 0; pwmnum < 16; pwmnum++) {
-		pwm.setPWM(pwmnum, 0, 0);
-	}
-
+	webserver.begin(&wifi, PORT);
+	wifi.printStatus();
+	
 	pinMode(A0, INPUT);
 	pinMode(A1, INPUT);
+
+	stair.flash();
 }
 
 
 
 void loop() {
 	if (wifi.isConnected()) {
-
-
+		stair.tick();
+		webserver.tick();
 	}
 	else {
-		lightAll(4095);
-		delay(50);
-		lightAll(0);
-		delay(50);
+		//lightAll(4095);
+		//delay(50);
+		//lightAll(0);
+		//delay(50);
 	}
 
 	//for (uint8_t pwmnum = 0; pwmnum < 16; pwmnum += 2) {
@@ -169,56 +167,3 @@ void loop() {
 //	}
 //}
 
-int pwmMap[16] = { 0, 2, 4, 6, 8, 10, 12 ,14, 15, 13, 11, 9, 7, 5, 3, 1 };
-void setMappedPWM(uint16_t ledPin, int16_t value)
-{
-	pwm.setPWM(pwmMap[ledPin], 0, value);
-}
-
-void lightFromTop(uint8_t ledPin)
-{
-	for (int8_t pwmnum = 15; pwmnum >= ledPin; pwmnum--) {
-		lightSpikeUp(pwmnum);
-		lightSpikeDown(pwmnum);
-	}
-	lightSpikeUp(ledPin);
-}
-
-void lightSpikeDown(uint8_t ledPin)
-{
-	for (int16_t i = 4096; i >= 0; i -= 64) {
-		setMappedPWM(ledPin, i);
-	}
-}
-
-void lightSpikeUp(uint8_t ledPin) {
-	for (uint16_t i = 0; i < 4096; i += 64) {
-		setMappedPWM(ledPin, i);
-	}
-}
-
-void smoothDown() {
-	for (int16_t i = 4096; i >= 0; i -= 1) {
-		for (int8_t ledPin = 15; ledPin >= 0; ledPin--) {
-			setMappedPWM(ledPin, i);
-		}
-	}
-}
-
-void lightAll(int16_t value) {
-
-	for (int8_t ledPin = 15; ledPin >= 0; ledPin--) {
-		setMappedPWM(ledPin, value);
-	}
-
-}
-
-void lightSequence1()
-{
-	for (int8_t ledPin = 0; ledPin < 16; ledPin++) {
-		lightFromTop(ledPin);
-	}
-	delay(5000);
-	smoothDown();
-
-}

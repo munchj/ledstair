@@ -18,15 +18,33 @@
     <None Include="ledstairs.ino" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="LightSource.h">
+    <ClInclude Include="__vm\.ledstairs.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="__vm\.ledstairs.vsarduino.h">
+    <ClInclude Include="EspWifi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Stair.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Led.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EspWebserver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="LightSource.cpp">
+    <ClCompile Include="EspWifi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Stair.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Led.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EspWebserver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
