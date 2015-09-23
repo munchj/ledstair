@@ -68,20 +68,20 @@ void Stair::begin() {
 }
 
 void Stair::tick() {
-	unsigned long now = millis();
+	//unsigned long now = millis();
 
-	int16_t t = (now - _functionInitTime) % 4096 ;
-	float angle = ((float)t / 4096.0) * 6.28;
-	for (uint8_t i = 0; i < LED_COUNT; i++)
-	{
-		float phase = (2.0 * 3.1415 / 16.0) * (float)i;
-		_leds[i]->setIntensity((int16_t)((1.0 + sin(angle-phase)) * 2048));
-	}
-
+	//int16_t t = (now - _functionInitTime) % 10000 ;
+	//float angle = ((float)t / 10000) * 6.28;
 	//for (uint8_t i = 0; i < LED_COUNT; i++)
 	//{
-	//	_leds[i]->tick();
+	//	float phase = (2.0 * 3.1415 / 16.0) * (float)i;
+	//	_leds[i]->setIntensity((int16_t)((1.0 + sin(angle-phase)) * 2048));
 	//}
+
+	for (uint8_t i = 0; i < LED_COUNT; i++)
+	{
+		_leds[i]->tick();
+	}
 
 	for (uint8_t i = 0; i < LED_COUNT; i++)
 	{

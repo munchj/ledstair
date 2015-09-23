@@ -33,6 +33,9 @@
     <ClInclude Include="EspWebserver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="EspHttpMessage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EspWifi.cpp">
@@ -45,6 +48,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EspWebserver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EspHttpMessage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -14,7 +14,7 @@ private:
 	EspWifi * _wifi;
 	Stair * _stair;
 public:
-	void begin(EspWifi * wifi, int port);
+	void setWifi(EspWifi * wifi) { _wifi = wifi; }
 	void setStair(Stair * stair) { _stair = stair; }
 public:
 	void tick();
