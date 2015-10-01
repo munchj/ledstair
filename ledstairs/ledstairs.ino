@@ -1,27 +1,19 @@
+#include <Constants.h>
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver\Adafruit_PWMServoDriver.h>
 #include <EspWifi.h>
 #include <EspWebserver.h>
 #include <Stair.h>
 
-#define DBG Serial
-#define ESP Serial1
-
-#define SSID "SlackersParadise"
-#define PASS "irrigas adjutrici!& elementis*1337"
-#define PORT 8080
-
 
 Stair stair;
-EspWifi wifi(&DBG, &ESP);
-EspWebserver webserver(&DBG);
+EspWifi wifi;
+EspWebserver webserver;
 
 
 void setup() {
 	DBG.begin(9600);
 	ESP.begin(115200);
-
-
 
 	DBG.println("[ledstair] starting up...");
 
