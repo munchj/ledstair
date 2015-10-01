@@ -21,6 +21,7 @@ public:
 	void tick();
 
 public:
+	void lightUp(int16_t intensity);
 	void lightUp(int16_t intensity, long time);
 	void lightUpUntil(int16_t intensity, long time);
 };
