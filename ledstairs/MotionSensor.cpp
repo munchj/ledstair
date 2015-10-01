@@ -1,8 +1,7 @@
 #include <MotionSensor.h>
 
-MotionSensor::MotionSensor(int pin, Stair * stair) 
+MotionSensor::MotionSensor(int pin) 
 {
-  _stair = stair;
   _pin = pin;
   pinMode(_pin, INPUT);
 }
