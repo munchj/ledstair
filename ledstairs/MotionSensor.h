@@ -7,7 +7,7 @@
 class MotionSensor
 {
   public:
-    MotionSensor(int pin, Stair * stair);
+    MotionSensor(int pin);
     ~MotionSensor();
     
   private:
@@ -17,6 +17,7 @@ class MotionSensor
     long _lastCheck;
     
   public:
+    void begin( Stair * stair) {_stair = stair;}
     void tick();
 };
 
