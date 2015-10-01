@@ -120,11 +120,11 @@ void Stair::tick() {
 				{
 					if(_lightSequence2Helper.index1 > i || 15-i==_lightSequence2Helper.index2)
 					{
-						
+						_leds[i]->setIntensity(MAX_INTENSITY);
 					}
 					else
 					{
-						
+						_leds[i]->setIntensity(0);
 					}
 					
 				}
