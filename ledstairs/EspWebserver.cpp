@@ -1,9 +1,9 @@
 #include "EspWebserver.h"
 
 
-EspWebserver::EspWebserver(HardwareSerial * dbg)
+EspWebserver::EspWebserver()
 {
-	_dbg = dbg;
+
 }
 
 
