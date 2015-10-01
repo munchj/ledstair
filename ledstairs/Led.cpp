@@ -14,8 +14,10 @@ Led::~Led()
 }
 
 void Led::tick() {
-	if (millis() > _endTime) {
-		_intensity = 0;
+	if(_endTime > 0) {
+		if (millis() > _endTime) {
+			_intensity = 0;
+		}
 	}
 }
 
@@ -28,6 +30,11 @@ int16_t Led::getIntensity() {
 }
 uint8_t Led::getPin() {
 	return _pin;
+}
+
+void Led::lightUp(int16_t intensity) {
+	_endTime = 0;
+	_intensity = intensity;
 }
 
 void Led::lightUp(int16_t intensity, long time) {
