@@ -15,6 +15,12 @@ enum StairMode {
 	STATIC
 };
 
+struct LightSequence2Helper {
+	long lastTick;
+	uint8_t index1;
+	uint8_t index2;
+}
+
 class Stair
 {
 public:
@@ -32,6 +38,7 @@ private:
 	Adafruit_PWMServoDriver _pwm;
 	uint8_t _sequenceIndex;
 	StairMode _mode;
+	struct LightSequence2Helper _lightSequence2Helper;
 	
 public:
 	void setMode(StairMode mode) {_mode = mode;}
