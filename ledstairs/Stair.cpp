@@ -7,8 +7,7 @@
 uint8_t pwmMap[16] = { 0, 2, 4, 6, 8, 10, 12 ,14, 15, 13, 11, 9, 7, 5, 3, 1 };
 Stair::Stair()
 {
-
-	
+	_mode = LIGHT_SEQUENCE_1;
 }
 
 
