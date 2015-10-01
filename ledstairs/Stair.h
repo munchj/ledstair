@@ -31,6 +31,11 @@ private:
 	Led* _leds[LED_COUNT];
 	Adafruit_PWMServoDriver _pwm;
 	uint8_t _sequenceIndex;
+	StairMode _mode;
+	
+public:
+	void setMode(StairMode mode) {_mode = mode;}
+	StairMode getMode() {return _mode;}
 
 public:
 	void lightUp(uint8_t led, int16_t intensity);
