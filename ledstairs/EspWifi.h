@@ -1,3 +1,4 @@
+#include <Constants.h>
 #include <Wire.h>
 #include <Stair.h>
 #include <QueueList\QueueList.h>
@@ -13,8 +14,6 @@
 #ifndef ESPWIFI
 #define ESPWIFI
 
-
-class HardwareSerial;
 
 enum WifiState {
 	BEGINNING,
@@ -60,7 +59,7 @@ enum WifiState {
 class EspWifi
 {
 public:
-	EspWifi(HardwareSerial * dbg, HardwareSerial * esp);
+	EspWifi();
 	~EspWifi();
 
 private:
@@ -70,8 +69,6 @@ private:
 
 
 private:
-	HardwareSerial* _esp;
-	HardwareSerial* _dbg;
 	char _buffer[BUFFER_SIZE];
 	bool _error;
 	Stair * _stair;
