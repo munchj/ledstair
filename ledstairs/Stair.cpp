@@ -111,6 +111,32 @@ void Stair::tick() {
 				
 			}
 			break;
+		}	
+		case LIGHT_SEQUENCE_2:
+		{
+			if(now - _lightSequence2Helper.lastTick > 20)
+			{
+				for (uint8_t i = 0; i < LED_COUNT; i++)
+				{
+					if(_lightSequence2Helper.index1 > i || 15-i==_lightSequence2Helper.index2)
+					{
+						
+					}
+					else
+					{
+						
+					}
+					
+				}
+				
+				_lightSequence2Helper.index2++;
+				if(_lightSequence2Helper.index2 == 16 - _lightSequence2Helper.index1)
+				{
+					_lightSequence2Helper.index2 = 0;
+					_lightSequence2Helper.index1++;
+				}
+			}
+			break;
 		}		
 		default:
 		{
