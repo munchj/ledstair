@@ -1,3 +1,4 @@
+#include <Constants.h>
 #include <EspWifi.h>
 #include <Stair.h>
 
@@ -7,10 +8,9 @@
 class EspWebserver
 {
 public:
-	EspWebserver(HardwareSerial * dbg);
+	EspWebserver();
 	~EspWebserver();
 private:
-	HardwareSerial * _dbg;
 	EspWifi * _wifi;
 	Stair * _stair;
 public:
