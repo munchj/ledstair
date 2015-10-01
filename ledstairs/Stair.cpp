@@ -66,6 +66,10 @@ void Stair::begin() {
 	lightNext();
 }
 
+void Stair::motionDetected(uint8_t id) {
+	_functionInitTime = millis();
+}
+
 void Stair::tick() {
 	unsigned long now = millis();
 
