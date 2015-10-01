@@ -7,6 +7,14 @@
 #ifndef STAIR
 #define STAIR
 
+enum StairMode {
+	DEFAULT,
+	LIGHT_SEQUENCE_1,
+	LIGHT_SEQUENCE_2,
+	SINUSOIDE,
+	STATIC
+};
+
 class Stair
 {
 public:
@@ -25,17 +33,11 @@ private:
 	uint8_t _sequenceIndex;
 
 public:
+	void lightUp(uint8_t led, int16_t intensity);
 	void lightUp(uint8_t led, int16_t intensity, long time);
 	void lightUpUntil(uint8_t led, int16_t intensity, long time);
 	void lightNext();
 	void flash();
-
-//private:
-//	void lightFromTop(uint8_t ledPin);
-//	void lightSpikeDown(uint8_t ledPin);
-//	void lightSpikeUp(uint8_t ledPin);
-//	void smoothDown();
-//	void lightSequence1();
 };
 
 
