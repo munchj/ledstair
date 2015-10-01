@@ -14,23 +14,20 @@ Stair::~Stair()
 {
 }
 
+void Stair::lightUp(uint8_t led, int16_t intensity) {
+	if (led >= 0 && led < LED_COUNT) {
+		_leds[led]->lightUp(intensity);
+	}
+}
+
 void Stair::lightUp(uint8_t led, int16_t intensity, long time) {
 	if (led >= 0 && led < LED_COUNT) {
-		DBG.print("[Stair] lighthing up ");
-		DBG.print(led);
-		DBG.print(" for ");
-		DBG.print(time);
-		DBG.println("ms");
 		_leds[led]->lightUp(intensity, time);
 	}
 }
 
 void Stair::lightUpUntil(uint8_t led, int16_t intensity, long time) {
 	if (led >= 0 && led < LED_COUNT) {
-		DBG.print("[Stair] lighthing up ");
-		DBG.print(led);
-		DBG.print(" until ");
-		DBG.println(time);
 		_leds[led]->lightUpUntil(intensity, time);
 	}
 }
