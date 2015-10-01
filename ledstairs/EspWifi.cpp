@@ -1,6 +1,5 @@
 #include "Arduino.h"
 #include "EspWifi.h"
-#include "HardwareSerial.h"
 
 char * WifiStateName[] =
 {
@@ -42,26 +41,22 @@ char * WifiStateName[] =
 	"WAITING_MESSAGE_SENT"
 };
 
-EspWifi::EspWifi(HardwareSerial * dbg, HardwareSerial * esp)
+EspWifi::EspWifi()
 {
-	_dbg = dbg;
-	_esp = esp;
 	_error = false;
 }
 
 
 EspWifi::~EspWifi()
 {
-	_esp = NULL;
-	_dbg = NULL;
 
 }
 
 void EspWifi::transitionTo(WifiState newState, long timeout) {
 	_state = newState;
 	_timeout = millis() + timeout;
-	_dbg->print("[EspWifi][transitionTo] ");
-	_dbg->println(WifiStateName[newState]);
+	DBG.print("[EspWifi][transitionTo] ");
+	DBG.println(WifiStateName[newState]);
 	_findIndex = 0;
 }
 
@@ -73,8 +68,8 @@ bool EspWifi::find(char * term) {
 	int len = strlen(term);
 	bool found = false;
 	bool success = false;
-	if (_esp->available()) {
-		_buffer[_findIndex++] = _esp->read();
+	if (ESP.available()) {
+		_buffer[_findIndex++] = ESP.read();
 		if (_findIndex >= len) {
 			if (strncmp(_buffer + _findIndex - len, term, len) == 0) {
 				found = true;
@@ -90,19 +85,19 @@ bool EspWifi::find(char * term) {
 	_buffer[_findIndex] = 0;
 
 	if (found) {
-		_dbg->print(_buffer);
+		DBG.print(_buffer);
 	}
 	return success;
 }
 
 bool EspWifi::readLine() {
-	if (_esp->available()) {
-		_buffer[_findIndex++] = _esp->read();
+	if (ESP.available()) {
+		_buffer[_findIndex++] = ESP.read();
 		if (_findIndex == BUFFER_SIZE)  _findIndex = 0;
 		if (_findIndex > 1 && _buffer[_findIndex - 2] == 13 && _buffer[_findIndex - 1] == 10) {
 			_buffer[_findIndex] = 0;
 			_findIndex = 0;
-			_dbg->print(_buffer);
+			DBG.print(_buffer);
 			return true;
 		}
 	}
@@ -118,7 +113,7 @@ void EspWifi::tick() {
 	}
 	case WAITING_CONNECTION_SEQUENCE:
 	{
-		_esp->println("AT+GMR");
+		ESP.println("AT+GMR");
 		transitionTo(WAITING_AT, 1000);
 		break;
 	}
@@ -134,7 +129,7 @@ void EspWifi::tick() {
 	}
 	case AT_OK:
 	{
-		_esp->println("AT+CWMODE=1");
+		ESP.println("AT+CWMODE=1");
 		transitionTo(WAITING_SET_MODE, 1000);
 		break;
 	}
@@ -154,7 +149,7 @@ void EspWifi::tick() {
 	}
 	case SET_MODE_OK:
 	{
-		_esp->println("AT+RST");
+		ESP.println("AT+RST");
 		transitionTo(WAITING_RESET, 2000);
 		break;
 	}
@@ -188,7 +183,7 @@ void EspWifi::tick() {
 			transitionTo(CHECK_CONNECTED_KO);
 		}
 		else if (find()) {
-			_dbg->println(_buffer + 8);
+			DBG.println(_buffer + 8);
 			if (strncmp(_buffer + 8, _ssid, strlen(_ssid)))
 			{
 				transitionTo(CHECK_CONNECTED_OK);
@@ -206,11 +201,11 @@ void EspWifi::tick() {
 	}
 	case CHECK_CONNECTED_KO:
 	{
-		_esp->print("AT+CWJAP=\"");
-		_esp->print(_ssid);
-		_esp->print("\",\"");
-		_esp->print(_password);
-		_esp->println("\"");
+		ESP.print("AT+CWJAP=\"");
+		ESP.print(_ssid);
+		ESP.print("\",\"");
+		ESP.print(_password);
+		ESP.println("\"");
 		transitionTo(WAITING_JOIN_AP, 10000);
 
 		break;
@@ -227,7 +222,7 @@ void EspWifi::tick() {
 	}
 	case JOIN_AP_OK:
 	{
-		_esp->println("AT+CIPMUX=1");
+		ESP.println("AT+CIPMUX=1");
 		transitionTo(WAITING_ENABLE_MULTIPLE_CONNECTIONS, 1000);
 		break;
 	}
@@ -249,8 +244,8 @@ void EspWifi::tick() {
 	}
 	case ENABLE_MULTIPLE_CONNECTIONS_OK:
 	{
-		_esp->print("AT+CIPSERVER=1,"); // turn on TCP service
-		_esp->println(_port);
+		ESP.print("AT+CIPSERVER=1,"); // turn on TCP service
+		ESP.println(_port);
 		transitionTo(WAITING_SERVER_START, 1000);
 		break;
 	}
@@ -270,7 +265,7 @@ void EspWifi::tick() {
 	}
 	case SERVER_START_OK:
 	{
-		_esp->println("AT+CIPSTO=30");
+		ESP.println("AT+CIPSTO=30");
 		transitionTo(WAITING_SET_SERVER_TIMEOUT, 1000);
 		break;
 	}
@@ -290,7 +285,7 @@ void EspWifi::tick() {
 	}
 	case SET_SERVER_TIMEOUT_OK:
 	{
-		_esp->println("AT+CIFSR");
+		ESP.println("AT+CIFSR");
 		transitionTo(WAITING_STATUS, 5000);
 		break;
 	}
@@ -337,13 +332,13 @@ void EspWifi::tick() {
 	case WAITING_MESSAGE_PROMPT:
 	{
 		if (timeout()) {
-			_dbg->println("Failed to get prompt, removing message from queue anyways");
+			DBG.println("Failed to get prompt, removing message from queue anyways");
 			EspHttpMessage message = _outgoingMessages.pop();
 			transitionTo(SERVER_READY);
 		}
 		else if (find("> ")) {
 			EspHttpMessage message = _outgoingMessages.pop();
-			_esp->print(message.getMessage());
+			ESP.print(message.getMessage());
 			transitionTo(WAITING_MESSAGE_SENT, 2000);
 		}
 		break;
@@ -363,10 +358,10 @@ void EspWifi::tick() {
 
 		if (!_outgoingMessages.isEmpty()) {
 			EspHttpMessage message = _outgoingMessages.peek();
-			_esp->print("AT+CIPSEND=");
-			_esp->print(message.getChannelId());
-			_esp->print(",");
-			_esp->println(message.getMessage().length());
+			ESP.print("AT+CIPSEND=");
+			ESP.print(message.getChannelId());
+			ESP.print(",");
+			ESP.println(message.getMessage().length());
 			transitionTo(WAITING_MESSAGE_PROMPT, 2000);
 		}
 		else if (readLine())
@@ -375,7 +370,7 @@ void EspWifi::tick() {
 			char *pb;
 			if (strncmp(getBuffer(), "+IPD,", 5) == 0)
 			{
-				_dbg->println("RECEIVED MESSAGE");
+				DBG.println("RECEIVED MESSAGE");
 				sscanf(getBuffer() + 5, "%d,%d", &ch_id, &packet_len);
 				if (packet_len > 0)
 				{
@@ -383,21 +378,21 @@ void EspWifi::tick() {
 					while (*pb != ':') pb++;
 					pb++;
 					if (strncmp(pb, "GET", 3) == 0) {
-						_dbg->print("[EspWebserver] GET ");
+						DBG.print("[EspWebserver] GET ");
 						pb += 4;
 						if (strncmp(pb, "/favicon.ico", 12) == 0) {
-							_dbg->println("favicon");
+							DBG.println("favicon");
 						}
 						else if (strncmp(pb, "/spike/", 7) == 0) {
 							int led, time;
 							sscanf(pb + 7, "%d/%d", &led, &time);
-							_dbg->print("spike ");
-							_dbg->println(led);
+							DBG.print("spike ");
+							DBG.println(led);
 							_stair->lightUp(led, 4095, time);
 							send(OKRN, ch_id);
 						}
 						else if (strncmp(pb, "/", 1) == 0) {
-							_dbg->println("/");
+							DBG.println("/");
 							send(OKRN, ch_id);
 						}
 					}
@@ -405,11 +400,11 @@ void EspWifi::tick() {
 			}
 			else if (strncmp(getBuffer() + 2, "CONNECT FAIL", 12) == 0)
 			{
-				_dbg->println("Detected connect fail");
+				DBG.println("Detected connect fail");
 			}
 			else if (strncmp(getBuffer() + 2, "CONNECT", 7) == 0)
 			{
-				_dbg->println("Detected connect");
+				DBG.println("Detected connect");
 			}
 		}
 
@@ -426,8 +421,8 @@ void EspWifi::tick() {
 
 
 void EspWifi::connect(char * ssid, char * password, int port) {
-	_dbg->print("[EspWifi] connecting to ");
-	_dbg->println(ssid);
+	DBG.print("[EspWifi] connecting to ");
+	DBG.println(ssid);
 	_ssid = ssid;
 	_password = password;
 	_port = port;
