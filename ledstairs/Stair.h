@@ -50,6 +50,9 @@ public:
 	void lightUpUntil(uint8_t led, int16_t intensity, long time);
 	void lightNext();
 	void flash();
+	
+public:
+	void motionDetected(uint8_t id);
 };
 
 
