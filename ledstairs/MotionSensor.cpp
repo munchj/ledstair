@@ -13,7 +13,7 @@ MotionSensor::~MotionSensor()
 
 void MotionSensor::tick() 
 {
-  if(millis() - lastCheck > 20) {
+  if(millis() - _lastCheck > 20) {
       if(digitalRead(_pin) == HIGH)
       {
         if(!_activated)

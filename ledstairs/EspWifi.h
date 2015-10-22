@@ -3,7 +3,6 @@
 #include <Stair.h>
 #include <QueueList\QueueList.h>
 #include <EspHttpMessage.h>
-#include <EspClient.h>
 
 
 #define BUFFER_SIZE 1024

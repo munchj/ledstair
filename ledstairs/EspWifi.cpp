@@ -84,9 +84,9 @@ bool EspWifi::find(char * term) {
 
 	_buffer[_findIndex] = 0;
 
-	if (found) {
+	//if (found) {
 		DBG.print(_buffer);
-	}
+	//}
 	return success;
 }
 

@@ -24,7 +24,7 @@ void setup() {
 	sensor1.begin(&stair);
 	sensor2.begin(&stair);
 
-	stair.flash();
+	//stair.flash();
 }
 
 

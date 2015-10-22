@@ -8,7 +8,8 @@
 #define STAIR
 
 enum StairMode {
-	DEFAULT,
+	DEFAULT_LIGHT_MODE,
+	LIGHT_MAX,
 	LIGHT_SEQUENCE_1,
 	LIGHT_SEQUENCE_2,
 	SINUSOIDE,
@@ -19,7 +20,7 @@ struct LightSequence2Helper {
 	long lastTick;
 	uint8_t index1;
 	uint8_t index2;
-}
+};
 
 class Stair
 {
