@@ -96,7 +96,6 @@ void Stair::begin() {
 		_leds[i] = new Led(pwmMap[i]);
 	}
 
-	//lightNext();
 	DBG.println("[Stair] begin ok");
 }
 
@@ -148,7 +147,7 @@ void Stair::tick() {
 			
 			int val = analogRead(A13);
 			
-			int computed = (val-255) * 15 / 12  ;
+			int computed = (val-253) * 15 /12 ;
 			if (computed < 0) {
 				computed = 0;
 			}
@@ -156,12 +155,41 @@ void Stair::tick() {
 				computed = 15;
 			}
 
-			DBG.print(computed);
-			DBG.print("/");
-			DBG.println(val);
 			for (uint8_t i = 0; i < LED_COUNT; i++)
 			{
-				_leds[LED_COUNT-i]->setIntensity(computed> i ? 2047 : 0);
+				if (computed > i) {
+					_leds[LED_COUNT - i]->setIntensity (MAX_INTENSITY);
+				}
+				else {
+					_leds[LED_COUNT - i]->setIntensity(0);
+				}
+			}
+			break;
+		}
+		case VUMETER2:
+		{
+
+			int val = analogRead(A13);
+
+			int computed = (val - 253) * 15 / 12;
+			if (computed < 0) {
+				computed = 0;
+			}
+			if (computed > 15) {
+				computed = 15;
+			}
+
+			for (int i = 0; i <= computed; i++) {
+				DBG.print('.');
+			}
+			DBG.println("");
+
+			long t = now + 50;
+			for (uint8_t i = 0; i < LED_COUNT; i++)
+			{
+				if (computed > i) {
+					_leds[LED_COUNT - i]->lightUpUntil(MAX_INTENSITY, t);
+				}
 			}
 			break;
 		}
@@ -235,10 +263,11 @@ void Stair::tick() {
 		}
 	}
 
+	now = millis();
 
 	for (uint8_t i = 0; i < LED_COUNT; i++)
 	{
-		//_leds[i]->tick();
+		_leds[i]->tick(now);
 	}
 
 	for (uint8_t i = 0; i < LED_COUNT; i++)
@@ -249,53 +278,3 @@ void Stair::tick() {
 
 
 }
-
-
-
-//void Stair::lightFromTop(uint8_t ledPin)
-//{
-//	for (int8_t pwmnum = 15; pwmnum >= ledPin; pwmnum--) {
-//		lightSpikeUp(pwmnum);
-//		lightSpikeDown(pwmnum);
-//	}
-//	lightSpikeUp(ledPin);
-//}
-//
-//void Stair::lightSpikeDown(uint8_t ledPin)
-//{
-//	for (int16_t i = 4096; i >= 0; i -= 64) {
-//		setMappedPWM(ledPin, i);
-//	}
-//}
-//
-//void Stair::lightSpikeUp(uint8_t ledPin) {
-//	for (uint16_t i = 0; i < 4096; i += 64) {
-//		setMappedPWM(ledPin, i);
-//	}
-//}
-//
-//void Stair::smoothDown() {
-//	for (int16_t i = 4096; i >= 0; i -= 1) {
-//		for (int8_t ledPin = 15; ledPin >= 0; ledPin--) {
-//			setMappedPWM(ledPin, i);
-//		}
-//	}
-//}
-//
-//void Stair::lightAll(int16_t value) {
-//
-//	for (int8_t ledPin = 15; ledPin >= 0; ledPin--) {
-//		setMappedPWM(ledPin, value);
-//	}
-//
-//}
-//
-//void lightSequence1()
-//{
-//	for (int8_t ledPin = 0; ledPin < 16; ledPin++) {
-//		lightFromTop(ledPin);
-//	}
-//	delay(5000);
-//	smoothDown();
-//
-//}

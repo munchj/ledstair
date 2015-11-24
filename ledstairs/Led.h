@@ -7,7 +7,7 @@ class Led
 private:
 	uint8_t _pin;
 	int16_t _intensity;
-	long _endTime;
+	unsigned long _endTime;
 public:
 	Led(uint8_t pin);
 	~Led();
@@ -15,10 +15,10 @@ public:
 	void setIntensity(int16_t);
 	int16_t getIntensity();
 	uint8_t getPin();
-	long getEndTime() { return _endTime; }
+	unsigned long getEndTime() { return _endTime; }
 
 public:
-	void tick();
+	void tick(unsigned long currentTime);
 
 public:
 	void lightUp(int16_t intensity);

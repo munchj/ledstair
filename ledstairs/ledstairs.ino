@@ -27,15 +27,11 @@ void setup() {
 	sensor3.begin(&stair);
 	
 	pinMode(A13, INPUT);
-
-	//stair.flash();
-
 	
 	pinMode(A7, INPUT_PULLUP);
 	button.attach(A7);
 	button.interval(10);
 }
-
 
 
 void loop() {
@@ -49,30 +45,4 @@ void loop() {
 	if (button.fell()) {
 		stair.nextMode();
 	}
-	//for (uint8_t pwmnum = 0; pwmnum < 16; pwmnum += 2) {
-	//	for (uint16_t i = 0; i<4096; i += 8) {
-	//		pwm.setPWM(pwmnum, 0, i);
-	//		delay(1);
-	//	}
-	//}
-	//for (uint8_t pwmnum = 1; pwmnum < 16; pwmnum += 2) {
-	//	for (uint16_t i = 0; i<4096; i += 8) {
-	//		pwm.setPWM(pwmnum, 0, i);
-	//		delay(1);
-	//	}
-	//}
-	//for (uint8_t pwmnum = 0; pwmnum < 16; pwmnum += 2) {
-	//	for (int16_t i = 4096; i >= 0; i -= 8) {
-	//		pwm.setPWM(pwmnum, 0, i);
-	//		delay(1);
-	//	}
-	//}
-	//for (uint8_t pwmnum = 1; pwmnum < 16; pwmnum += 2) {
-	//	for (int16_t i = 4096; i >= 0; i -= 8) {
-	//		pwm.setPWM(pwmnum, 0, i);
-	//		delay(1);
-	//	}
-	//}
-
-
 }

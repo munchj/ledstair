@@ -13,15 +13,23 @@ Led::~Led()
 {
 }
 
-void Led::tick() {
+void Led::tick(unsigned long currentTime) {
 	if(_endTime > 0) {
-		if (millis() > _endTime) {
+		Serial.print(_pin);
+		Serial.print("/");
+		Serial.print(currentTime);
+		Serial.print(" ");
+		Serial.println(_endTime);
+
+		if (currentTime > _endTime) {
+
 			_intensity = 0;
 		}
 	}
 }
 
 void Led::setIntensity(int16_t intensity) {
+	_endTime = 0;
 	_intensity = intensity;
 }
 

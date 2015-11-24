@@ -14,7 +14,8 @@ enum StairMode {
 	LIGHT_SEQUENCE_2,
 	SINUSOIDE,
 	STATIC,
-	VUMETER
+	VUMETER,
+	VUMETER2
 };
 
 
