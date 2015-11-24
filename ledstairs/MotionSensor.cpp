@@ -1,4 +1,5 @@
 #include <MotionSensor.h>
+#include <Constants.h>
 
 MotionSensor::MotionSensor(int pin) 
 {
@@ -13,8 +14,7 @@ MotionSensor::~MotionSensor()
 
 void MotionSensor::tick() 
 {
-  if(millis() - _lastCheck > 20) {
-      if(digitalRead(_pin) == HIGH)
+	  if(digitalRead(_pin) == HIGH)
       {
         if(!_activated)
         {
@@ -29,5 +29,4 @@ void MotionSensor::tick()
           _activated = false;
         }
       }
-    }
 }

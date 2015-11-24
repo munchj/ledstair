@@ -13,8 +13,10 @@ enum StairMode {
 	LIGHT_SEQUENCE_1,
 	LIGHT_SEQUENCE_2,
 	SINUSOIDE,
-	STATIC
+	STATIC,
+	VUMETER
 };
+
 
 struct LightSequence2Helper {
 	long lastTick;
@@ -31,7 +33,7 @@ public:
 public:
 	void begin();
 	void tick();
-	
+	void nextMode();
 
 private:
 	unsigned long _functionInitTime;
@@ -40,6 +42,7 @@ private:
 	uint8_t _sequenceIndex;
 	StairMode _mode;
 	struct LightSequence2Helper _lightSequence2Helper;
+	uint8_t _sensorTriggered;
 	
 public:
 	void setMode(StairMode mode) {_mode = mode;}

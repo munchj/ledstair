@@ -4,7 +4,11 @@
 #define MAX_INTENSITY 4095
 
 
-uint8_t pwmMap[16] = { 0, 2, 4, 6, 8, 10, 12 ,14, 1, 3, 5, 7, 9, 11, 13, 15 };
+//uint8_t pwmMap[16] = { 0, 2, 4, 6, 8, 10, 12 ,14, 1, 3, 5, 7, 9, 11, 13, 15 };
+//uint8_t pwmMap[16] = { 0, 2, 4, 6, 8, 10, 12 ,14, 15, 13, 11, 9, 7, 5, 3, 1 };
+//uint8_t pwmMap[16] = { 1,3,5,7,9,11,13,15,14,12,10,8,6,4,2,0 };
+uint8_t pwmMap[16] = {2,4,6,8,10,12,14,15,13,11,9,7,5,3,1, 0 };
+
 Stair::Stair()
 {
 	_mode = SINUSOIDE;
@@ -47,11 +51,41 @@ void Stair::flash() {
 	_functionInitTime = millis();
 }
 
+void Stair::nextMode()
+{
+	switch(_mode) {
+	case SINUSOIDE:
+		_mode = LIGHT_SEQUENCE_1;
+		break;
+	case LIGHT_SEQUENCE_1:
+		_mode = LIGHT_SEQUENCE_2;
+		break;
+	case LIGHT_SEQUENCE_2:
+		_mode = LIGHT_MAX;
+		break;
+	case LIGHT_MAX:
+		_mode = VUMETER;
+		break;
+	case VUMETER:
+		_mode = DEFAULT_LIGHT_MODE;
+		break;
+	case DEFAULT_LIGHT_MODE:
+		_mode = SINUSOIDE;
+		break;
+	}
+
+	DBG.println("next mode");
+	_functionInitTime = millis();
+	_lightSequence2Helper = LightSequence2Helper();
+}
+
 void Stair::begin() {
 	DBG.println("[Stair] begin");
 	_sequenceIndex = 0;
 	_functionInitTime = millis();
+	DBG.println("[Stair] pwm begin");
 	_pwm.begin();
+	DBG.println("[Stair] set freq");
 	_pwm.setPWMFreq(1600);  // This is the maximum PWM frequency
 
 	uint8_t twbrbackup = TWBR;
@@ -62,17 +96,34 @@ void Stair::begin() {
 		_leds[i] = new Led(pwmMap[i]);
 	}
 
-	lightNext();
+	//lightNext();
+	DBG.println("[Stair] begin ok");
 }
 
 void Stair::motionDetected(uint8_t id) {
-	_functionInitTime = millis();
+	long now = millis();
+	DBG.print("[Stair] motion detected :");
+	DBG.println(id);
+	if (now - _functionInitTime > 20000) {
+		DBG.println("[Stair] trigger");
+		_sensorTriggered = id;
+		_functionInitTime = now;
+	}
 }
 
 void Stair::tick() {
+
 	unsigned long now = millis();
 
 	switch(_mode) {
+	case DEFAULT_LIGHT_MODE:
+	{
+		for (uint8_t i = 0; i < LED_COUNT; i++)
+		{
+			_leds[i]->setIntensity(0);
+		}
+		break;
+	}
 	case LIGHT_MAX:
 	{
 		for (uint8_t i = 0; i < LED_COUNT; i++)
@@ -92,6 +143,28 @@ void Stair::tick() {
 			}
 			break;
 		}
+		case VUMETER:
+		{
+			
+			int val = analogRead(A13);
+			
+			int computed = (val-255) * 15 / 12  ;
+			if (computed < 0) {
+				computed = 0;
+			}
+			if (computed > 15) {
+				computed = 15;
+			}
+
+			DBG.print(computed);
+			DBG.print("/");
+			DBG.println(val);
+			for (uint8_t i = 0; i < LED_COUNT; i++)
+			{
+				_leds[LED_COUNT-i]->setIntensity(computed> i ? 2047 : 0);
+			}
+			break;
+		}
 		case LIGHT_SEQUENCE_1:
 		{
 			int16_t lightUpDuration = 900;
@@ -102,26 +175,27 @@ void Stair::tick() {
 			for (uint8_t i = 0; i < LED_COUNT; i++)
 			{
 				long tChannel = t - phaseDuration * i; //t + phase
+				uint8_t ledIndex = _sensorTriggered == A1 ? i : 15 - i;
 				
 				if(tChannel < 0 ||  tChannel > (lightUpDuration+lightDownDuration+totalUpDuration))
 				{
 					//DBG.print(tChannel); DBG.println("...1");
-					_leds[i]->setIntensity(0);	
+					_leds[ledIndex]->setIntensity(0);
 				}
 				else if(tChannel > 0 && tChannel <= lightUpDuration)
 				{
 					//DBG.print(tChannel); DBG.println("...2");
-					_leds[i]->setIntensity(tChannel  * MAX_INTENSITY / lightUpDuration);
+					_leds[ledIndex]->setIntensity(tChannel  * MAX_INTENSITY / lightUpDuration);
 				}
 				else if(tChannel > lightUpDuration && tChannel <= (lightUpDuration+totalUpDuration))
 				{
 					//DBG.print(tChannel); DBG.println("...3");
-					_leds[i]->setIntensity(MAX_INTENSITY);
+					_leds[ledIndex]->setIntensity(MAX_INTENSITY);
 				}
 				else if(tChannel > (lightUpDuration+totalUpDuration) && tChannel <= (lightUpDuration+totalUpDuration+lightDownDuration))
 				{
 					//DBG.print(tChannel); DBG.println("...4");
-					_leds[i]->setIntensity((lightUpDuration+totalUpDuration+lightDownDuration-tChannel)  * MAX_INTENSITY / lightDownDuration);
+					_leds[ledIndex]->setIntensity((lightUpDuration+totalUpDuration+lightDownDuration-tChannel)  * MAX_INTENSITY / lightDownDuration);
 				}
 				
 			}
@@ -134,13 +208,14 @@ void Stair::tick() {
 				_lightSequence2Helper.lastTick = now;
 				for (uint8_t i = 0; i < LED_COUNT; i++)
 				{
+					uint8_t ledIndex = _sensorTriggered == A0 ? i : 15 - i;
 					if(_lightSequence2Helper.index1 > i || 15-i==_lightSequence2Helper.index2)
 					{
-						_leds[i]->setIntensity(MAX_INTENSITY);
+						_leds[ledIndex]->setIntensity(MAX_INTENSITY);
 					}
 					else
 					{
-						_leds[i]->setIntensity(0);
+						_leds[ledIndex]->setIntensity(0);
 					}
 					
 				}
@@ -163,11 +238,12 @@ void Stair::tick() {
 
 	for (uint8_t i = 0; i < LED_COUNT; i++)
 	{
-		_leds[i]->tick();
+		//_leds[i]->tick();
 	}
 
 	for (uint8_t i = 0; i < LED_COUNT; i++)
 	{
+		//DBG.println(_leds[i]->getIntensity());
 		_pwm.setPWM(_leds[i]->getPin(), 0, _leds[i]->getIntensity());
 	}
 

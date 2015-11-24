@@ -73,6 +73,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Bounce2.h" />
     <ClInclude Include="Constants.h">
       <FileType>CppCode</FileType>
     </ClInclude>
@@ -86,6 +87,7 @@
     <ClInclude Include="__vm\.ledstairs.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Bounce2.cpp" />
     <ClCompile Include="EspHttpMessage.cpp" />
     <ClCompile Include="EspWebserver.cpp" />
     <ClCompile Include="EspWifi.cpp" />
