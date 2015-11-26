@@ -19,6 +19,7 @@ enum StairMode {
 };
 
 
+
 struct LightSequence2Helper {
 	long lastTick;
 	uint8_t index1;
@@ -35,19 +36,21 @@ public:
 	void begin();
 	void tick();
 	void nextMode();
+	void nextIntensity();
 
 private:
 	unsigned long _functionInitTime;
 	Led* _leds[LED_COUNT];
 	Adafruit_PWMServoDriver _pwm;
-	uint8_t _sequenceIndex;
 	StairMode _mode;
 	struct LightSequence2Helper _lightSequence2Helper;
 	uint8_t _sensorTriggered;
+	int _maxIntensity;
 	
 public:
 	void setMode(StairMode mode) {_mode = mode;}
 	StairMode getMode() {return _mode;}
+	void setMaxIntensity(int intensity) { _maxIntensity = intensity; }
 
 public:
 	void lightUp(uint8_t led, int16_t intensity);

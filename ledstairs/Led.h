@@ -17,6 +17,9 @@ public:
 	uint8_t getPin();
 	unsigned long getEndTime() { return _endTime; }
 
+private:
+	void _setIntensity(int16_t);
+
 public:
 	void tick(unsigned long currentTime);
 

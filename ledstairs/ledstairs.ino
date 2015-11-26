@@ -12,6 +12,11 @@ MotionSensor sensor1(A0);
 MotionSensor sensor2(A1);
 MotionSensor sensor3(A2);
 Bounce button = Bounce();
+int incomingByte = 0;
+bool buttonChanged = false;
+int currentButtonValue = LOW;
+int lastButtonValue = LOW;
+unsigned long buttonDownTime = 0;
 
 void setup() {
 	DBG.begin(9600);
@@ -30,7 +35,7 @@ void setup() {
 	
 	pinMode(A7, INPUT_PULLUP);
 	button.attach(A7);
-	button.interval(10);
+	button.interval(5);
 }
 
 
@@ -41,8 +46,38 @@ void loop() {
 	//wifi.tick();
 	stair.tick();
 	
-	button.update();
-	if (button.fell()) {
-		stair.nextMode();
+	buttonChanged = button.update();
+
+	currentButtonValue = button.read();
+	if (currentButtonValue != lastButtonValue) {
+		if (currentButtonValue == HIGH) {
+			unsigned long pressDuration = millis() - buttonDownTime;
+			if (pressDuration < 400) {
+				stair.nextMode();
+			}
+			else if (pressDuration < 2000) {
+				stair.nextIntensity();
+			}
+			else {
+				stair.setMode(DEFAULT_LIGHT_MODE);
+			}
+			
+		}
+		else {
+			buttonDownTime = millis();
+		}
+		
 	}
+	lastButtonValue = currentButtonValue;
+
+
+	if (DBG.available() > 0) {
+		incomingByte = DBG.read();
+		switch (incomingByte) {
+		case 'n' :
+			stair.nextMode();
+			break;
+		}
+	}
+	//DBG.print(".");
 }
