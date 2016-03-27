@@ -8,8 +8,14 @@
 /* Default wifi settings */
 //#define SSID "SlackersParadise"
 //#define PASS "irrigas adjutrici!& elementis*1337"
-#define SSID "AndroidAP"
-#define PASS ""
+//#define SSID "CEDWIFI"
+//#define PASS "tuilerie67"
+#define SSID "FREESAVWIFI"
+#define PASS "azertyuiopqsdfghjklmwxcvbn123456789"
+
+//#define SSID "SlackersMobile"
+//#define PASS "munchj8756"
+
 #define PORT 8080
 
 #endif

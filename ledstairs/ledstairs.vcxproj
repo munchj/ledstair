@@ -81,6 +81,7 @@
     <ClInclude Include="EspWebserver.h" />
     <ClInclude Include="EspWifi.h" />
     <ClInclude Include="Led.h" />
+    <ClInclude Include="MemoryFree.h" />
     <ClInclude Include="MotionSensor.h" />
     <ClInclude Include="Stair.h" />
     <ClInclude Include="Test.h" />
@@ -92,6 +93,7 @@
     <ClCompile Include="EspWebserver.cpp" />
     <ClCompile Include="EspWifi.cpp" />
     <ClCompile Include="Led.cpp" />
+    <ClCompile Include="MemoryFree.cpp" />
     <ClCompile Include="MotionSensor.cpp" />
     <ClCompile Include="Stair.cpp" />
     <ClCompile Include="Test.cpp" />

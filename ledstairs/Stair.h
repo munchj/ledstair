@@ -13,6 +13,7 @@ enum StairMode {
 	LIGHT_SEQUENCE_1,
 	LIGHT_SEQUENCE_2,
 	SINUSOIDE,
+	SINUSOIDE2,
 	STATIC,
 	VUMETER,
 	VUMETER2
@@ -36,7 +37,9 @@ public:
 	void begin();
 	void tick();
 	void nextMode();
+	void setMode(int mode);
 	void nextIntensity();
+	void setIntensity(int intensity);
 
 private:
 	unsigned long _functionInitTime;

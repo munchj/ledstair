@@ -81,6 +81,10 @@ bool EspWifi::find(char * term) {
 			}
 		}
 	}
+	else
+	{
+		DBG.print(".");
+	}
 
 	_buffer[_findIndex] = 0;
 
@@ -114,7 +118,7 @@ void EspWifi::tick() {
 	case WAITING_CONNECTION_SEQUENCE:
 	{
 		ESP.println("AT+GMR");
-		transitionTo(WAITING_AT, 1000);
+		transitionTo(WAITING_AT, 3000);
 		break;
 	}
 	case WAITING_AT:
@@ -149,8 +153,9 @@ void EspWifi::tick() {
 	}
 	case SET_MODE_OK:
 	{
-		ESP.println("AT+RST");
-		transitionTo(WAITING_RESET, 2000);
+		transitionTo(CHECK_CONNECTED_KO);
+		//ESP.println("AT+RST");
+		//transitionTo(WAITING_RESET, 4000);
 		break;
 	}
 	case SET_MODE_KO:
@@ -169,8 +174,8 @@ void EspWifi::tick() {
 	}
 	case RESET_OK:
 	{
-		//_esp->println("AT+CWJAP?");
-		transitionTo(WAITING_CHECK_CONNECTED, 5000);
+		//ESP.println("AT+CWJAP?");
+		//transitionTo(WAITING_CHECK_CONNECTED, 5000);
 		break;
 	}
 	case RESET_KO:
@@ -206,7 +211,7 @@ void EspWifi::tick() {
 		ESP.print("\",\"");
 		ESP.print(_password);
 		ESP.println("\"");
-		transitionTo(WAITING_JOIN_AP, 10000);
+		transitionTo(WAITING_JOIN_AP, 60000);
 
 		break;
 	}
@@ -286,7 +291,7 @@ void EspWifi::tick() {
 	case SET_SERVER_TIMEOUT_OK:
 	{
 		ESP.println("AT+CIFSR");
-		transitionTo(WAITING_STATUS, 5000);
+		transitionTo(WAITING_STATUS, 8000);
 		break;
 	}
 	case SET_SERVER_TIMEOUT_KO:
@@ -383,12 +388,36 @@ void EspWifi::tick() {
 						if (strncmp(pb, "/favicon.ico", 12) == 0) {
 							DBG.println("favicon");
 						}
+						else if (strncmp(pb, "/nextmode/", 10) == 0) {
+							int led, time;
+						
+							DBG.print("nextMode ");
+							
+							_stair->nextMode();
+							send(OKRN, ch_id);
+						}
 						else if (strncmp(pb, "/spike/", 7) == 0) {
 							int led, time;
 							sscanf(pb + 7, "%d/%d", &led, &time);
 							DBG.print("spike ");
 							DBG.println(led);
 							_stair->lightUp(led, 4095, time);
+							send(OKRN, ch_id);
+						}
+						else if (strncmp(pb, "/setintensity/", 14) == 0) {
+							int intensity;
+							sscanf(pb + 14, "%d", &intensity);
+							DBG.print("intensity ");
+							DBG.println(intensity);
+							_stair->setIntensity(intensity);
+							send(OKRN, ch_id);
+						}
+						else if (strncmp(pb, "/setmode/", 9) == 0) {
+							int mode;
+							sscanf(pb + 9, "%d", &mode);
+							DBG.print("mode ");
+							DBG.println(mode);
+							_stair->setMode(mode);
 							send(OKRN, ch_id);
 						}
 						else if (strncmp(pb, "/", 1) == 0) {

@@ -5,6 +5,7 @@
 #include <Stair.h>
 #include <MotionSensor.h>
 #include <Bounce2.h>
+#include <MemoryFree.h>
 
 Stair stair;
 EspWifi wifi;
@@ -14,8 +15,8 @@ MotionSensor sensor3(A2);
 Bounce button = Bounce();
 int incomingByte = 0;
 bool buttonChanged = false;
-int currentButtonValue = LOW;
-int lastButtonValue = LOW;
+int currentButtonValue = HIGH;
+int lastButtonValue = HIGH;
 unsigned long buttonDownTime = 0;
 
 void setup() {
@@ -25,7 +26,7 @@ void setup() {
 	DBG.println("[ledstair] starting up...");
 	stair.begin();
 	wifi.setStair(&stair);
-	//wifi.connect(SSID, PASS, PORT);
+	wifi.connect(SSID, PASS, PORT);
 	
 	sensor1.begin(&stair);
 	sensor2.begin(&stair);
@@ -43,7 +44,7 @@ void loop() {
 	sensor1.tick();
 	sensor2.tick();
 	sensor3.tick();
-	//wifi.tick();
+	wifi.tick();
 	stair.tick();
 	
 	buttonChanged = button.update();
@@ -79,5 +80,6 @@ void loop() {
 			break;
 		}
 	}
-	//DBG.print(".");
+	//DBG.print("Free memory:");
+	//DBG.println(freeMemory());
 }

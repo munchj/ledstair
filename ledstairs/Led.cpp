@@ -27,18 +27,18 @@ void Led::tick(unsigned long currentTime) {
 	}
 }
 
-void Led::_setIntensity(int16_t intensity) {
+void Led::_setIntensity(uint16_t intensity) {
 	_intensity = intensity;
 
-	if (_intensity > 4095) {
-		_intensity = 4095;
+	if (_intensity > 4000) {
+		_intensity = 4000;
 	}
 	else if (_intensity < 0) {
 		_intensity = 0;
 	}
 }
 
-void Led::setIntensity(int16_t intensity) {
+void Led::setIntensity(uint16_t intensity) {
 	//DBG.print("[led][");
 	//DBG.print(_pin);
 	//DBG.print("][setIntensity] ");
@@ -47,7 +47,7 @@ void Led::setIntensity(int16_t intensity) {
 	_setIntensity(intensity);
 }
 
-int16_t Led::getIntensity() {
+uint16_t Led::getIntensity() {
 	//DBG.print("[led][");
 	//DBG.print(_pin);
 	//DBG.print("][getIntensity] ");
@@ -58,17 +58,17 @@ uint8_t Led::getPin() {
 	return _pin;
 }
 
-void Led::lightUp(int16_t intensity) {
+void Led::lightUp(uint16_t intensity) {
 	_endTime = 0;
 	_setIntensity(intensity);
 }
 
-void Led::lightUp(int16_t intensity, long time) {
+void Led::lightUp(uint16_t intensity, long time) {
 	_endTime = millis() + time;
 	_setIntensity(intensity);
 }
 
-void Led::lightUpUntil(int16_t intensity, long time) {
+void Led::lightUpUntil(uint16_t intensity, long time) {
 	_endTime = time;
 	_setIntensity(intensity);
 }
