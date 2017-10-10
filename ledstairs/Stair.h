@@ -16,10 +16,11 @@ enum StairMode {
 	SINUSOIDE2,
 	STATIC,
 	VUMETER,
-	VUMETER2
+	VUMETER2,
+	WIFI_INIT
 };
 
-
+class EspWifi;
 
 struct LightSequence2Helper {
 	long lastTick;
@@ -40,8 +41,10 @@ public:
 	void setMode(int mode);
 	void nextIntensity();
 	void setIntensity(int intensity);
+	void setWifi(EspWifi * wifi) { _wifi = wifi; }
 
 private:
+	EspWifi * _wifi;
 	unsigned long _functionInitTime;
 	Led* _leds[LED_COUNT];
 	Adafruit_PWMServoDriver _pwm;

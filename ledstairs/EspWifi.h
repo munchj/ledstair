@@ -50,7 +50,9 @@ enum WifiState {
 	STATUS_OK,
 	STATUS_KO,
 	WAITING_MESSAGE_PROMPT,
-	WAITING_MESSAGE_SENT
+	WAITING_MESSAGE_SENT,
+	WAITING_SET_IP,
+	SET_IP_OK
 };
 
 
@@ -100,6 +102,8 @@ private:
 	bool find(char * term = OKRN);
 	bool readLine();
 	int _findIndex;
+public:
+	WifiState getState() { return _state; }
 };
 
 #endif

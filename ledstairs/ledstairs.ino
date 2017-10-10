@@ -24,8 +24,20 @@ void setup() {
 	ESP.begin(115200);
 
 	DBG.println("[ledstair] starting up...");
+	
+
+	delay(2000);
+	DBG.print("[ledstair] resetting ESP ...");
+	analogWrite(8, 0);
+	delay(10000);
+	analogWrite(8, 170);
+	DBG.println("done");
 	stair.begin();
+	stair.setWifi(&wifi);
 	wifi.setStair(&stair);
+
+
+
 	wifi.connect(SSID, PASS, PORT);
 	
 	sensor1.begin(&stair);

@@ -38,7 +38,9 @@ char * WifiStateName[] =
 	"STATUS_OK",
 	"STATUS_KO",
 	"WAITING_MESSAGE_PROMPT",
-	"WAITING_MESSAGE_SENT"
+	"WAITING_MESSAGE_SENT",
+	"WAITING_SET_IP",
+	"SET_IP_OK"
 };
 
 EspWifi::EspWifi()
@@ -88,9 +90,9 @@ bool EspWifi::find(char * term) {
 
 	_buffer[_findIndex] = 0;
 
-	//if (found) {
+	if (found) {
 		DBG.print(_buffer);
-	//}
+	}
 	return success;
 }
 
@@ -126,15 +128,15 @@ void EspWifi::tick() {
 		if (timeout()) {
 			transitionTo(AT_KO);
 		}
-		else if (find()) {
+		else if (find(")\r\n")) {
 			transitionTo(AT_OK);
 		}
 		break;
 	}
 	case AT_OK:
 	{
-		ESP.println("AT+CWMODE=1");
-		transitionTo(WAITING_SET_MODE, 1000);
+		ESP.println("AT+CWMODE=3");
+		transitionTo(WAITING_SET_MODE, 2000);
 		break;
 	}
 	case AT_KO:
@@ -153,13 +155,32 @@ void EspWifi::tick() {
 	}
 	case SET_MODE_OK:
 	{
-		transitionTo(CHECK_CONNECTED_KO);
+		ESP.println("AT+CIPSTA=\"192.168.66.211\",\"192.168.66.254\",\"255.255.255.0\"");
+		transitionTo(WAITING_SET_IP, 10000);
+		
 		//ESP.println("AT+RST");
 		//transitionTo(WAITING_RESET, 4000);
 		break;
 	}
 	case SET_MODE_KO:
 	{
+		break;
+	}
+	case WAITING_SET_IP:
+	{
+		if (timeout()) {
+			transitionTo(CHECK_CONNECTED_KO);
+		}
+		else if (find()) {
+			transitionTo(CHECK_CONNECTED_KO);
+		}
+		
+		
+		break;
+	}
+	case SET_IP_OK:
+	{
+
 		break;
 	}
 	case WAITING_RESET:
@@ -201,6 +222,7 @@ void EspWifi::tick() {
 	}
 	case CHECK_CONNECTED_OK:
 	{
+		
 		transitionTo(JOIN_AP_OK);
 		break;
 	}
@@ -220,11 +242,12 @@ void EspWifi::tick() {
 		if (timeout()) {
 			transitionTo(JOIN_AP_KO);
 		}
-		else if (find()) {
+		else if (find("WIFI CONNECTED\r\n")) {
 			transitionTo(JOIN_AP_OK);
 		}
 		break;
 	}
+
 	case JOIN_AP_OK:
 	{
 		ESP.println("AT+CIPMUX=1");
@@ -290,6 +313,7 @@ void EspWifi::tick() {
 	}
 	case SET_SERVER_TIMEOUT_OK:
 	{
+		_stair->nextMode();
 		ESP.println("AT+CIFSR");
 		transitionTo(WAITING_STATUS, 8000);
 		break;
@@ -326,11 +350,13 @@ void EspWifi::tick() {
 	}
 	case STATUS_OK:
 	{
+		
 		transitionTo(SERVER_READY);
 		break;
 	}
 	case STATUS_KO:
 	{
+		
 		transitionTo(SERVER_READY);
 		break;
 	}
