@@ -17,7 +17,9 @@ enum StairMode {
 	STATIC,
 	VUMETER,
 	VUMETER2,
+	LIGHT_SEQUENCE_3,
 	WIFI_INIT
+	
 };
 
 class EspWifi;

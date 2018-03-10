@@ -11,7 +11,7 @@
 //#define SSID "CEDWIFI"
 //#define PASS "tuilerie67"
 #define SSID "FREESAVWIFI"
-#define PASS "azertyuiopqsdfghjklmwxcvbn123456789"
+#define PASS "azertyuiop123456789"
 
 //#define SSID "SlackersMobile"
 //#define PASS "munchj8756"

@@ -40,7 +40,9 @@ char * WifiStateName[] =
 	"WAITING_MESSAGE_PROMPT",
 	"WAITING_MESSAGE_SENT",
 	"WAITING_SET_IP",
-	"SET_IP_OK"
+	"SET_IP_OK",
+	"SET_IP_KO",
+	"RETRY"
 };
 
 EspWifi::EspWifi()
@@ -53,6 +55,43 @@ EspWifi::~EspWifi()
 {
 
 }
+
+void ESPPrint(char * command) {
+	DBG.print(">>>> ");
+	DBG.print(command);
+	ESP.print(command);
+}
+
+void ESPPrintLN(char * command) {
+	DBG.print(">>>> ");
+	DBG.println(command);
+	ESP.println(command);
+}
+
+void ESPPrint(String command) {
+	DBG.print(">>>> ");
+	DBG.print(command);
+	ESP.print(command);
+}
+
+void ESPPrintLN(String command) {
+	DBG.print(">>>> ");
+	DBG.println(command);
+	ESP.println(command);
+}
+
+void ESPPrint(int command) {
+	DBG.print(">>>> ");
+	DBG.print(command);
+	ESP.print(command);
+}
+
+void ESPPrintLN(int command) {
+	DBG.print(">>>> ");
+	DBG.println(command);
+	ESP.println(command);
+}
+
 
 void EspWifi::transitionTo(WifiState newState, long timeout) {
 	_state = newState;
@@ -85,7 +124,7 @@ bool EspWifi::find(char * term) {
 	}
 	else
 	{
-		DBG.print(".");
+		//DBG.print(".");
 	}
 
 	_buffer[_findIndex] = 0;
@@ -117,10 +156,21 @@ void EspWifi::tick() {
 	{
 		break;
 	}
+	case RETRY:
+	{
+		DBG.print("[ledstair] resetting ESP ...");
+		analogWrite(8, 0);
+		delay(10000);
+		analogWrite(8, 170);
+		DBG.println("done");
+		delay(5000);
+		transitionTo(WAITING_CONNECTION_SEQUENCE);
+		break;
+	}
 	case WAITING_CONNECTION_SEQUENCE:
 	{
-		ESP.println("AT+GMR");
-		transitionTo(WAITING_AT, 3000);
+		ESPPrintLN("AT+GMR");
+		transitionTo(WAITING_AT, 5000);
 		break;
 	}
 	case WAITING_AT:
@@ -135,8 +185,8 @@ void EspWifi::tick() {
 	}
 	case AT_OK:
 	{
-		ESP.println("AT+CWMODE=3");
-		transitionTo(WAITING_SET_MODE, 2000);
+		ESPPrintLN("AT+CWMODE=1");
+		transitionTo(WAITING_SET_MODE, 5000);
 		break;
 	}
 	case AT_KO:
@@ -149,17 +199,16 @@ void EspWifi::tick() {
 			transitionTo(SET_MODE_KO);
 		}
 		else if (find()) {
+			delay(5000);
 			transitionTo(SET_MODE_OK);
 		}
 		break;
 	}
 	case SET_MODE_OK:
 	{
-		ESP.println("AT+CIPSTA=\"192.168.66.211\",\"192.168.66.254\",\"255.255.255.0\"");
-		transitionTo(WAITING_SET_IP, 10000);
-		
-		//ESP.println("AT+RST");
-		//transitionTo(WAITING_RESET, 4000);
+		//ESPPrintLN("AT+CIPSTA=\"192.168.66.211\",\"192.168.66.254\",\"255.255.255.0\"");
+		//transitionTo(WAITING_SET_IP, 60000);
+		transitionTo(CHECK_CONNECTED_KO);
 		break;
 	}
 	case SET_MODE_KO:
@@ -169,40 +218,24 @@ void EspWifi::tick() {
 	case WAITING_SET_IP:
 	{
 		if (timeout()) {
-			transitionTo(CHECK_CONNECTED_KO);
+			transitionTo(SET_IP_KO);
 		}
-		else if (find()) {
-			transitionTo(CHECK_CONNECTED_KO);
+		else if (find("255.0")) {
+			transitionTo(SET_IP_OK);
 		}
-		
-		
+		break;
+	}
+	case SET_IP_KO:
+	{
+		transitionTo(RETRY);
 		break;
 	}
 	case SET_IP_OK:
 	{
+		transitionTo(CHECK_CONNECTED_OK);
+		break;
+	}
 
-		break;
-	}
-	case WAITING_RESET:
-	{
-		if (timeout()) {
-			transitionTo(RESET_KO);
-		}
-		else if (find()) {
-			transitionTo(RESET_OK);
-		}
-		break;
-	}
-	case RESET_OK:
-	{
-		//ESP.println("AT+CWJAP?");
-		//transitionTo(WAITING_CHECK_CONNECTED, 5000);
-		break;
-	}
-	case RESET_KO:
-	{
-		break;
-	}
 	case WAITING_CHECK_CONNECTED:
 	{
 		if (timeout()) {
@@ -222,17 +255,17 @@ void EspWifi::tick() {
 	}
 	case CHECK_CONNECTED_OK:
 	{
-		
+
 		transitionTo(JOIN_AP_OK);
 		break;
 	}
 	case CHECK_CONNECTED_KO:
 	{
-		ESP.print("AT+CWJAP=\"");
-		ESP.print(_ssid);
-		ESP.print("\",\"");
-		ESP.print(_password);
-		ESP.println("\"");
+		ESPPrint("AT+CWJAP=\"");
+		ESPPrint(_ssid);
+		ESPPrint("\",\"");
+		ESPPrint(_password);
+		ESPPrintLN("\"");
 		transitionTo(WAITING_JOIN_AP, 60000);
 
 		break;
@@ -250,14 +283,13 @@ void EspWifi::tick() {
 
 	case JOIN_AP_OK:
 	{
-		ESP.println("AT+CIPMUX=1");
-		transitionTo(WAITING_ENABLE_MULTIPLE_CONNECTIONS, 1000);
+		ESPPrintLN("AT+CIPMUX=1");
+		transitionTo(WAITING_ENABLE_MULTIPLE_CONNECTIONS, 60000);
 		break;
 	}
 	case JOIN_AP_KO:
 	{
-		//_esp->println("AT+CWJAP?");
-		//find();
+		transitionTo(RETRY);
 		break;
 	}
 	case WAITING_ENABLE_MULTIPLE_CONNECTIONS:
@@ -272,13 +304,14 @@ void EspWifi::tick() {
 	}
 	case ENABLE_MULTIPLE_CONNECTIONS_OK:
 	{
-		ESP.print("AT+CIPSERVER=1,"); // turn on TCP service
-		ESP.println(_port);
+		ESPPrint("AT+CIPSERVER=1,"); // turn on TCP service
+		ESPPrintLN(_port);
 		transitionTo(WAITING_SERVER_START, 1000);
 		break;
 	}
 	case ENABLE_MULTIPLE_CONNECTIONS_KO:
 	{
+		transitionTo(RETRY);
 		break;
 	}
 	case WAITING_SERVER_START:
@@ -293,12 +326,13 @@ void EspWifi::tick() {
 	}
 	case SERVER_START_OK:
 	{
-		ESP.println("AT+CIPSTO=30");
+		ESPPrintLN("AT+CIPSTO=30");
 		transitionTo(WAITING_SET_SERVER_TIMEOUT, 1000);
 		break;
 	}
 	case SERVER_START_KO:
 	{
+		transitionTo(RETRY);
 		break;
 	}
 	case WAITING_SET_SERVER_TIMEOUT:
@@ -314,12 +348,13 @@ void EspWifi::tick() {
 	case SET_SERVER_TIMEOUT_OK:
 	{
 		_stair->nextMode();
-		ESP.println("AT+CIFSR");
+		ESPPrintLN("AT+CIFSR");
 		transitionTo(WAITING_STATUS, 8000);
 		break;
 	}
 	case SET_SERVER_TIMEOUT_KO:
 	{
+		transitionTo(RETRY);
 		break;
 	}
 	case WAITING_SEND_MESSAGE:
@@ -350,13 +385,13 @@ void EspWifi::tick() {
 	}
 	case STATUS_OK:
 	{
-		
+
 		transitionTo(SERVER_READY);
 		break;
 	}
 	case STATUS_KO:
 	{
-		
+
 		transitionTo(SERVER_READY);
 		break;
 	}
@@ -369,7 +404,7 @@ void EspWifi::tick() {
 		}
 		else if (find("> ")) {
 			EspHttpMessage message = _outgoingMessages.pop();
-			ESP.print(message.getMessage());
+			ESPPrint(message.getMessage());
 			transitionTo(WAITING_MESSAGE_SENT, 2000);
 		}
 		break;
@@ -389,10 +424,10 @@ void EspWifi::tick() {
 
 		if (!_outgoingMessages.isEmpty()) {
 			EspHttpMessage message = _outgoingMessages.peek();
-			ESP.print("AT+CIPSEND=");
-			ESP.print(message.getChannelId());
-			ESP.print(",");
-			ESP.println(message.getMessage().length());
+			ESPPrint("AT+CIPSEND=");
+			ESPPrint(message.getChannelId());
+			ESPPrint(",");
+			ESPPrintLN(message.getMessage().length());
 			transitionTo(WAITING_MESSAGE_PROMPT, 2000);
 		}
 		else if (readLine())
@@ -416,9 +451,9 @@ void EspWifi::tick() {
 						}
 						else if (strncmp(pb, "/nextmode/", 10) == 0) {
 							int led, time;
-						
+
 							DBG.print("nextMode ");
-							
+
 							_stair->nextMode();
 							send(OKRN, ch_id);
 						}

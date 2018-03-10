@@ -13,6 +13,7 @@ char * StairModeName[] =
 	"STATIC",
 	"VUMETER",
 	"VUMETER2",
+	"LIGHT_SEQUENCE_3",
 	"WIFI_INIT"
 };
 
@@ -76,8 +77,10 @@ void Stair::nextMode()
 		_mode = LIGHT_SEQUENCE_2;
 		break;
 	case LIGHT_SEQUENCE_2:
-		_mode = VUMETER;
+		_mode = LIGHT_SEQUENCE_3;
 		break;
+	case LIGHT_SEQUENCE_3:
+		_mode = VUMETER;
 	case VUMETER:
 		_mode = LIGHT_MAX;
 		break;
@@ -358,6 +361,27 @@ void Stair::tick() {
 				_lightSequence2Helper.index1 = 0;
 				_lightSequence2Helper.index2 = 0;
 				_lightSequence2Helper.lastTick = 0;
+			}
+		}
+
+		break;
+	}
+	case LIGHT_SEQUENCE_3:
+	{
+		long t = (now - _functionInitTime);
+
+		if (t < 15000) {
+			for (uint8_t i = 0; i < LED_COUNT; i++)
+			{
+				uint8_t ledIndex = 15 - i;//_sensorTriggered == A0 ? i : 15 - i;
+				_leds[ledIndex]->setIntensity(_maxIntensity*t/15000);
+			}
+		}
+		else
+		{
+			for (uint8_t i = 0; i < LED_COUNT; i++)
+			{
+				_leds[i]->setIntensity(0);
 			}
 		}
 

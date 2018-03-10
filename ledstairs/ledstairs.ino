@@ -32,6 +32,7 @@ void setup() {
 	delay(10000);
 	analogWrite(8, 170);
 	DBG.println("done");
+	delay(5000);
 	stair.begin();
 	stair.setWifi(&wifi);
 	wifi.setStair(&stair);
