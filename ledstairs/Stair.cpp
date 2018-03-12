@@ -10,16 +10,15 @@ char * StairModeName[] =
 	"LIGHT_SEQUENCE_1",
 	"LIGHT_SEQUENCE_2",
 	"SINUSOIDE",
+	"SINUSOIDE2",
 	"STATIC",
 	"VUMETER",
 	"VUMETER2",
 	"LIGHT_SEQUENCE_3",
-	"WIFI_INIT"
+	"WIFI_INIT",
+	"SINUSOIDE3",
 };
 
-//uint8_t pwmMap[16] = { 0, 2, 4, 6, 8, 10, 12 ,14, 1, 3, 5, 7, 9, 11, 13, 15 };
-//uint8_t pwmMap[16] = { 0, 2, 4, 6, 8, 10, 12 ,14, 15, 13, 11, 9, 7, 5, 3, 1 };
-//uint8_t pwmMap[16] = { 1,3,5,7,9,11,13,15,14,12,10,8,6,4,2,0 };
 uint8_t pwmMap[16] = { 2,4,6,8,10,12,14,15,13,11,9,7,5,3,1, 0 };
 
 Stair::Stair()
@@ -71,6 +70,9 @@ void Stair::nextMode()
 		_mode = SINUSOIDE2;
 		break;
 	case SINUSOIDE2:
+		_mode = SINUSOIDE3;
+		break;
+	case SINUSOIDE3:
 		_mode = LIGHT_SEQUENCE_1;
 		break;
 	case LIGHT_SEQUENCE_1:
@@ -82,16 +84,16 @@ void Stair::nextMode()
 	case LIGHT_SEQUENCE_3:
 		_mode = VUMETER;
 	case VUMETER:
+		_mode = VUMETER2;
+		break;
+	case VUMETER2:
 		_mode = LIGHT_MAX;
 		break;
-		//case VUMETER2:
-		//	_mode = LIGHT_MAX;
-		//	break;
 	case LIGHT_MAX:
 		_mode = DEFAULT_LIGHT_MODE;
 		break;
 	case DEFAULT_LIGHT_MODE:
-		_mode = LIGHT_SEQUENCE_1;
+		_mode = SINUSOIDE;
 		break;
 	}
 
@@ -224,13 +226,56 @@ void Stair::tick() {
 				}
 			}
 		}
-
-
+		break;
+	}
+	case SINUSOIDE3:
+	{
+		float duration = 1000.0;
+		int16_t t = (now - _functionInitTime) % 2000;
+		if (t < duration) {
+			for (uint8_t i = 0; i < LED_COUNT; i++)
+			{
+				if (t > i*duration / (float)LED_COUNT && t < (i + 1) * duration / (float)LED_COUNT) {
+					_leds[i]->setIntensity(_maxIntensity);
+				}
+				else if (t > (i-1)*duration / (float)LED_COUNT && t < (i) * duration / (float)LED_COUNT) {
+					_leds[i]->setIntensity(_maxIntensity/2.0);
+				}
+				else if (t >(i - 2)*duration / (float)LED_COUNT && t < (i-1)* duration / (float)LED_COUNT) {
+					_leds[i]->setIntensity(_maxIntensity / 3.0);
+				}
+				else if (t >(i - 3)*duration / (float)LED_COUNT && t < (i-2)* duration / (float)LED_COUNT) {
+					_leds[i]->setIntensity(_maxIntensity / 4.0);
+				}
+				else {
+					_leds[i]->setIntensity(0);
+				}
+			}
+		}
+		else {
+			for (uint8_t i = 0; i < LED_COUNT; i++)
+			{
+				if (t - duration > i*duration / (float)LED_COUNT && t - duration < (i + 1) * duration / (float)LED_COUNT) {
+					_leds[LED_COUNT - i]->setIntensity(_maxIntensity);
+				}
+				else if (t - duration > (i-1)*duration / (float)LED_COUNT && t - duration < (i) * duration / (float)LED_COUNT) {
+					_leds[LED_COUNT - i]->setIntensity(_maxIntensity/2.0);
+				}
+				else if (t - duration >(i-2)*duration / (float)LED_COUNT && t - duration < (i-1)* duration / (float)LED_COUNT) {
+					_leds[LED_COUNT - i]->setIntensity(_maxIntensity / 3.0);
+				}
+				else if (t - duration >(i-3)*duration / (float)LED_COUNT && t - duration < (i-2)* duration / (float)LED_COUNT) {
+					_leds[LED_COUNT - i]->setIntensity(_maxIntensity / 4.0);
+				}
+				else {
+					_leds[LED_COUNT - i]->setIntensity(0);
+				}
+			}
+		}
 		break;
 	}
 	case VUMETER:
 	{
-
 		int val = analogRead(A13);
 
 		int computed = (val - 253) * 15 / 12;
@@ -240,11 +285,6 @@ void Stair::tick() {
 		if (computed > 15) {
 			computed = 15;
 		}
-
-		//for (int i = 0; i <= computed; i++) {
-		//	DBG.print('.');
-		//}
-		//DBG.println("");
 
 		for (uint8_t i = 0; i < LED_COUNT; i++)
 		{
@@ -259,7 +299,6 @@ void Stair::tick() {
 	}
 	case VUMETER2:
 	{
-
 		int val = analogRead(A13);
 
 		int computed = (val - 253) * 15 / 12;
@@ -269,11 +308,6 @@ void Stair::tick() {
 		if (computed > 15) {
 			computed = 15;
 		}
-
-		//for (int i = 0; i <= computed; i++) {
-		//	DBG.print('.');
-		//}
-		//DBG.println("");
 
 		long t = now + 50;
 		for (uint8_t i = 0; i < LED_COUNT; i++)
@@ -294,33 +328,25 @@ void Stair::tick() {
 		long t = (now - _functionInitTime);
 		for (uint8_t i = 0; i < LED_COUNT; i++)
 		{
-			//DBG.print("b");
-			//DBG.println(i);
 			long tChannel = t - phaseDuration * i; //t + phase
 			uint8_t ledIndex = (_sensorTriggered == A2) ? i : 15 - i;
 
 			if (tChannel < 0 || tChannel >(lightUpDuration + lightDownDuration + totalUpDuration))
 			{
-				//DBG.print(tChannel); DBG.println("...1");
 				_leds[ledIndex]->setIntensity(0);
 			}
 			else if (tChannel > 0 && tChannel <= lightUpDuration)
 			{
-				//DBG.print(tChannel); DBG.println("...2");
 				_leds[ledIndex]->setIntensity(tChannel  * _maxIntensity / lightUpDuration);
 			}
 			else if (tChannel > lightUpDuration && tChannel <= (lightUpDuration + totalUpDuration))
 			{
-				//DBG.print(tChannel); DBG.println("...3");
 				_leds[ledIndex]->setIntensity(_maxIntensity);
 			}
 			else if (tChannel > (lightUpDuration + totalUpDuration) && tChannel <= (lightUpDuration + totalUpDuration + lightDownDuration))
 			{
-				//DBG.print(tChannel); DBG.println("...4");
 				_leds[ledIndex]->setIntensity((lightUpDuration + totalUpDuration + lightDownDuration - tChannel)  * _maxIntensity / lightDownDuration);
 			}
-			//DBG.print("e");
-			//DBG.println(i);
 		}
 		break;
 	}
@@ -369,12 +395,22 @@ void Stair::tick() {
 	case LIGHT_SEQUENCE_3:
 	{
 		long t = (now - _functionInitTime);
+		double a = 3.0;
+		double halfTime = 15000;
 
-		if (t < 15000) {
+		if (t < halfTime) {
 			for (uint8_t i = 0; i < LED_COUNT; i++)
 			{
-				uint8_t ledIndex = 15 - i;//_sensorTriggered == A0 ? i : 15 - i;
-				_leds[ledIndex]->setIntensity(_maxIntensity*t/15000);
+				uint8_t ledIndex = 15 - i;
+				_leds[ledIndex]->setIntensity(pow(t, a)*_maxIntensity/pow(halfTime,a));
+			}
+		}
+		else if (t >= halfTime && t < 2* halfTime)
+		{
+			for (uint8_t i = 0; i < LED_COUNT; i++)
+			{
+				uint8_t ledIndex = 15 - i;
+				_leds[ledIndex]->setIntensity(pow(2*halfTime-t, a)*_maxIntensity / pow(halfTime, a));
 			}
 		}
 		else
@@ -396,20 +432,9 @@ void Stair::tick() {
 
 	for (uint8_t i = 0; i < LED_COUNT; i++)
 	{
-		//delayMicroseconds(2000);
-		//DBG.print("<");
-		//
-		//DBG.print(_leds[i]->getPin());
-		//DBG.print(":");
-		//DBG.print(_leds[i]->getIntensity());
-		//delay(5);
 		uint8_t pin = _leds[i]->getPin();
 		uint16_t intensity = _leds[i]->getIntensity();
 		_leds[i]->tick(now);
 		_pwm.setPWM(pin, 0, intensity);
-		//DBG.println(">");
 	}
-
-	//DBG.println("END");
-
 }

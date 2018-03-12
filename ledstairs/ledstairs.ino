@@ -5,7 +5,7 @@
 #include <Stair.h>
 #include <MotionSensor.h>
 #include <Bounce2.h>
-#include <MemoryFree.h>
+
 
 Stair stair;
 EspWifi wifi;
@@ -93,6 +93,4 @@ void loop() {
 			break;
 		}
 	}
-	//DBG.print("Free memory:");
-	//DBG.println(freeMemory());
 }

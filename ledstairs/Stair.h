@@ -18,7 +18,8 @@ enum StairMode {
 	VUMETER,
 	VUMETER2,
 	LIGHT_SEQUENCE_3,
-	WIFI_INIT
+	WIFI_INIT,
+	SINUSOIDE3
 	
 };
 
@@ -64,7 +65,6 @@ public:
 	void lightUp(uint8_t led, int16_t intensity);
 	void lightUp(uint8_t led, int16_t intensity, long time);
 	void lightUpUntil(uint8_t led, int16_t intensity, long time);
-	void lightNext();
 	void flash();
 	
 public:
