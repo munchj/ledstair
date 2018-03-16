@@ -24,29 +24,23 @@ void setup() {
 	ESP.begin(115200);
 
 	DBG.println("[ledstair] starting up...");
-	
-
-	delay(2000);
-	DBG.print("[ledstair] resetting ESP ...");
-	analogWrite(8, 0);
-	delay(10000);
-	analogWrite(8, 170);
-	DBG.println("done");
-	delay(5000);
+	//Initializing stair routine
 	stair.begin();
 	stair.setWifi(&wifi);
+
+	//Initializing wifi routine
 	wifi.setStair(&stair);
-
-
-
 	wifi.connect(SSID, PASS, PORT);
-	
+
+	//Start sensors
 	sensor1.begin(&stair);
 	sensor2.begin(&stair);
 	sensor3.begin(&stair);
 	
+	//Input pin for sound sensor
 	pinMode(A13, INPUT);
 	
+	//Input pin for push button
 	pinMode(A7, INPUT_PULLUP);
 	button.attach(A7);
 	button.interval(5);
@@ -54,14 +48,16 @@ void setup() {
 
 
 void loop() {
+	//Update sensors
 	sensor1.tick();
 	sensor2.tick();
 	sensor3.tick();
+	//Update wifi routine
 	wifi.tick();
+	//Update stairs routine
 	stair.tick();
-	
+	//Check for button push
 	buttonChanged = button.update();
-
 	currentButtonValue = button.read();
 	if (currentButtonValue != lastButtonValue) {
 		if (currentButtonValue == HIGH) {
@@ -85,6 +81,7 @@ void loop() {
 	lastButtonValue = currentButtonValue;
 
 
+	//Read serial input
 	if (DBG.available() > 0) {
 		incomingByte = DBG.read();
 		switch (incomingByte) {

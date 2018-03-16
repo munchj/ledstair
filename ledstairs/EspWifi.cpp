@@ -3,45 +3,19 @@
 
 char * WifiStateName[] =
 {
-	"BEGINNING",
 	"SERVER_READY",
-	"WAITING_CONNECTION_SEQUENCE",
+	"CHECKING_ESP_FIRMWARE",
 	"WAITING_AT",
-	"AT_OK",
-	"AT_KO",
 	"WAITING_SET_MODE",
-	"SET_MODE_OK",
-	"SET_MODE_KO",
 	"WAITING_RESET",
-	"RESET_OK",
-	"RESET_KO",
 	"WAITING_CHECK_CONNECTED",
-	"CHECK_CONNECTED_OK",
-	"CHECK_CONNECTED_KO",
 	"WAITING_JOIN_AP",
-	"JOIN_AP_OK",
-	"JOIN_AP_KO",
 	"WAITING_ENABLE_MULTIPLE_CONNECTIONS",
-	"ENABLE_MULTIPLE_CONNECTIONS_OK",
-	"ENABLE_MULTIPLE_CONNECTIONS_KO",
 	"WAITING_SERVER_START",
-	"SERVER_START_OK",
-	"SERVER_START_KO",
 	"WAITING_SET_SERVER_TIMEOUT",
-	"SET_SERVER_TIMEOUT_OK",
-	"SET_SERVER_TIMEOUT_KO",
-	"WAITING_SEND_MESSAGE",
-	"SEND_MESSAGE_OK",
-	"SEND_MESSAGE_KO",
-	"INCOMING_MESSAGE",
 	"WAITING_STATUS",
-	"STATUS_OK",
-	"STATUS_KO",
 	"WAITING_MESSAGE_PROMPT",
 	"WAITING_MESSAGE_SENT",
-	"WAITING_SET_IP",
-	"SET_IP_OK",
-	"SET_IP_KO",
 	"RETRY"
 };
 
@@ -61,31 +35,26 @@ void ESPPrint(char * command) {
 	DBG.print(command);
 	ESP.print(command);
 }
-
 void ESPPrintLN(char * command) {
 	DBG.print(">>>> ");
 	DBG.println(command);
 	ESP.println(command);
 }
-
 void ESPPrint(String command) {
 	DBG.print(">>>> ");
 	DBG.print(command);
 	ESP.print(command);
 }
-
 void ESPPrintLN(String command) {
 	DBG.print(">>>> ");
 	DBG.println(command);
 	ESP.println(command);
 }
-
 void ESPPrint(int command) {
 	DBG.print(">>>> ");
 	DBG.print(command);
 	ESP.print(command);
 }
-
 void ESPPrintLN(int command) {
 	DBG.print(">>>> ");
 	DBG.println(command);
@@ -152,247 +121,114 @@ bool EspWifi::readLine() {
 void EspWifi::tick() {
 	switch (_state)
 	{
-	case BEGINNING:
-	{
-		break;
-	}
 	case RETRY:
 	{
+		//Initial/Retry state
 		DBG.print("[ledstair] resetting ESP ...");
 		analogWrite(8, 0);
 		delay(10000);
 		analogWrite(8, 170);
 		DBG.println("done");
 		delay(5000);
-		transitionTo(WAITING_CONNECTION_SEQUENCE);
-		break;
-	}
-	case WAITING_CONNECTION_SEQUENCE:
-	{
+
+		//Check ESP firmware
 		ESPPrintLN("AT+GMR");
 		transitionTo(WAITING_AT, 5000);
 		break;
 	}
-	case WAITING_AT:
+	case CHECKING_ESP_FIRMWARE:
 	{
 		if (timeout()) {
-			transitionTo(AT_KO);
+			//ESP did not reply, restart the wifi sequence from the start
+			transitionTo(RETRY);
 		}
 		else if (find(")\r\n")) {
-			transitionTo(AT_OK);
+			//ESP replied, switching to station mode
+			//1 = Station mode, 2 = AP mode, 3 = Station + AP dual mode
+			ESPPrintLN("AT+CWMODE=1");
+			transitionTo(WAITING_SET_MODE, 5000);
 		}
-		break;
-	}
-	case AT_OK:
-	{
-		ESPPrintLN("AT+CWMODE=1");
-		transitionTo(WAITING_SET_MODE, 5000);
-		break;
-	}
-	case AT_KO:
-	{
 		break;
 	}
 	case WAITING_SET_MODE:
 	{
 		if (timeout()) {
-			transitionTo(SET_MODE_KO);
+			//ESP did not reply, restart the wifi sequence from the start
+			transitionTo(RETRY);
 		}
 		else if (find()) {
-			delay(5000);
-			transitionTo(SET_MODE_OK);
+			//ESP set in station mode, connect to the wifi 
+			ESPPrint("AT+CWJAP=\"");
+			ESPPrint(_ssid);
+			ESPPrint("\",\"");
+			ESPPrint(_password);
+			ESPPrintLN("\"");
+			transitionTo(WAITING_JOIN_AP, 60000);
 		}
-		break;
-	}
-	case SET_MODE_OK:
-	{
-		//ESPPrintLN("AT+CIPSTA=\"192.168.66.211\",\"192.168.66.254\",\"255.255.255.0\"");
-		//transitionTo(WAITING_SET_IP, 60000);
-		transitionTo(CHECK_CONNECTED_KO);
-		break;
-	}
-	case SET_MODE_KO:
-	{
-		break;
-	}
-	case WAITING_SET_IP:
-	{
-		if (timeout()) {
-			transitionTo(SET_IP_KO);
-		}
-		else if (find("255.0")) {
-			transitionTo(SET_IP_OK);
-		}
-		break;
-	}
-	case SET_IP_KO:
-	{
-		transitionTo(RETRY);
-		break;
-	}
-	case SET_IP_OK:
-	{
-		transitionTo(CHECK_CONNECTED_OK);
-		break;
-	}
-
-	case WAITING_CHECK_CONNECTED:
-	{
-		if (timeout()) {
-			transitionTo(CHECK_CONNECTED_KO);
-		}
-		else if (find()) {
-			DBG.println(_buffer + 8);
-			if (strncmp(_buffer + 8, _ssid, strlen(_ssid)))
-			{
-				transitionTo(CHECK_CONNECTED_OK);
-			}
-			else {
-				transitionTo(CHECK_CONNECTED_KO);
-			}
-		}
-		break;
-	}
-	case CHECK_CONNECTED_OK:
-	{
-
-		transitionTo(JOIN_AP_OK);
-		break;
-	}
-	case CHECK_CONNECTED_KO:
-	{
-		ESPPrint("AT+CWJAP=\"");
-		ESPPrint(_ssid);
-		ESPPrint("\",\"");
-		ESPPrint(_password);
-		ESPPrintLN("\"");
-		transitionTo(WAITING_JOIN_AP, 60000);
-
 		break;
 	}
 	case WAITING_JOIN_AP:
 	{
 		if (timeout()) {
-			transitionTo(JOIN_AP_KO);
+			//ESP did not reply, restart the wifi sequence from the start
+			transitionTo(RETRY);
 		}
 		else if (find("WIFI CONNECTED\r\n")) {
-			transitionTo(JOIN_AP_OK);
+			//WIFI connected, enabled multiple connections
+			ESPPrintLN("AT+CIPMUX=1");
+			transitionTo(WAITING_ENABLE_MULTIPLE_CONNECTIONS, 60000);
 		}
-		break;
-	}
-
-	case JOIN_AP_OK:
-	{
-		ESPPrintLN("AT+CIPMUX=1");
-		transitionTo(WAITING_ENABLE_MULTIPLE_CONNECTIONS, 60000);
-		break;
-	}
-	case JOIN_AP_KO:
-	{
-		transitionTo(RETRY);
 		break;
 	}
 	case WAITING_ENABLE_MULTIPLE_CONNECTIONS:
 	{
 		if (timeout()) {
-			transitionTo(ENABLE_MULTIPLE_CONNECTIONS_KO);
+			//ESP did not reply, restart the wifi sequence from the start
+			transitionTo(RETRY);
 		}
 		else if (find()) {
-			transitionTo(ENABLE_MULTIPLE_CONNECTIONS_OK);
+			//Multiple connections ok, turn on TCP Service
+			ESPPrint("AT+CIPSERVER=1,"); // turn on TCP service
+			ESPPrintLN(_port);
+			transitionTo(WAITING_SERVER_START, 1000);
 		}
-		break;
-	}
-	case ENABLE_MULTIPLE_CONNECTIONS_OK:
-	{
-		ESPPrint("AT+CIPSERVER=1,"); // turn on TCP service
-		ESPPrintLN(_port);
-		transitionTo(WAITING_SERVER_START, 1000);
-		break;
-	}
-	case ENABLE_MULTIPLE_CONNECTIONS_KO:
-	{
-		transitionTo(RETRY);
 		break;
 	}
 	case WAITING_SERVER_START:
 	{
 		if (timeout()) {
-			transitionTo(SERVER_START_KO);
+			//ESP did not reply, restart the wifi sequence from the start
+			transitionTo(RETRY);
 		}
 		else if (find()) {
-			transitionTo(SERVER_START_OK);
+			//Server started, set the timeout
+			ESPPrintLN("AT+CIPSTO=30");
+			transitionTo(WAITING_SET_SERVER_TIMEOUT, 1000);
 		}
-		break;
-	}
-	case SERVER_START_OK:
-	{
-		ESPPrintLN("AT+CIPSTO=30");
-		transitionTo(WAITING_SET_SERVER_TIMEOUT, 1000);
-		break;
-	}
-	case SERVER_START_KO:
-	{
-		transitionTo(RETRY);
 		break;
 	}
 	case WAITING_SET_SERVER_TIMEOUT:
 	{
 		if (timeout()) {
-			transitionTo(SET_SERVER_TIMEOUT_KO);
+			//ESP did not reply, restart the wifi sequence from the start
+			transitionTo(RETRY);
 		}
 		else if (find()) {
-			transitionTo(SET_SERVER_TIMEOUT_OK);
+			//timeout set, checking status
+			_stair->nextMode();
+			ESPPrintLN("AT+CIFSR");
+			transitionTo(WAITING_STATUS, 8000);
 		}
-		break;
-	}
-	case SET_SERVER_TIMEOUT_OK:
-	{
-		_stair->nextMode();
-		ESPPrintLN("AT+CIFSR");
-		transitionTo(WAITING_STATUS, 8000);
-		break;
-	}
-	case SET_SERVER_TIMEOUT_KO:
-	{
-		transitionTo(RETRY);
-		break;
-	}
-	case WAITING_SEND_MESSAGE:
-	{
-		break;
-	}
-	case SEND_MESSAGE_OK:
-	{
-		break;
-	}
-	case SEND_MESSAGE_KO:
-	{
-		break;
-	}
-	case INCOMING_MESSAGE:
-	{
 		break;
 	}
 	case WAITING_STATUS:
 	{
 		if (timeout()) {
-			transitionTo(STATUS_KO);
+			transitionTo(RETRY);
 		}
 		else if (find()) {
-			transitionTo(STATUS_OK);
+			transitionTo(SERVER_READY);
 		}
-		break;
-	}
-	case STATUS_OK:
-	{
-
-		transitionTo(SERVER_READY);
-		break;
-	}
-	case STATUS_KO:
-	{
-
-		transitionTo(SERVER_READY);
 		break;
 	}
 	case WAITING_MESSAGE_PROMPT:
@@ -421,7 +257,6 @@ void EspWifi::tick() {
 	}
 	case SERVER_READY:
 	{
-
 		if (!_outgoingMessages.isEmpty()) {
 			EspHttpMessage message = _outgoingMessages.peek();
 			ESPPrint("AT+CIPSEND=");
@@ -516,7 +351,7 @@ void EspWifi::connect(char * ssid, char * password, int port) {
 	_ssid = ssid;
 	_password = password;
 	_port = port;
-	transitionTo(WAITING_CONNECTION_SEQUENCE);
+	transitionTo(RETRY);
 }
 
 
